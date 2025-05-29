@@ -1,0 +1,412 @@
+1. Return the total number of customers living in California
+Assumption:
+Collection: customers
+Customer document fields:
+District stores the state/province name (e.g. "California")
+Country stores the country name (e.g. "United States")
+
+Query:
+```js
+db.customers.countDocuments({
+  District: "California",
+  Country: "United States"
+});
+```
+
+2. List all movies that are rated NC-17. Return the title and the rating, sorted alphabetically by title.
+Assumptions:
+Collection: films
+Film document fields:
+Rating (string)
+Title (string)
+
+Query:
+```js
+db.films.find(
+  { Rating: "NC-17" },
+  { _id: 0, Title: 1, Rating: 1 }
+).sort({ Title: 1 });
+```
+
+3. List the movie titles and the count of actors in each movie, sorted alphabetically by title.
+Assumptions:
+In films, each document has:
+Actors: an array of sub‑documents
+Title
+
+Query:
+```js
+db.films.aggregate([
+  {
+    $project: {
+      _id: 0,
+      Title: 1,
+      actorCount: { $size: "$Actors" }
+    }
+  },
+  { $sort: { Title: 1 } }
+]);
+```
+
+4. List the count of movies by category. Return the category and the count, sorted by the count per category descending.
+Assumptions:
+In films, each document has Category (string)
+
+Query:
+```js
+db.films.aggregate([
+  {
+    $group: {
+      _id: "$Category",
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      category: "$_id",
+      count: 1
+    }
+  },
+  { $sort: { count: -1 } }
+]);
+```
+
+5. List the top 2 movies with movie length greater than 25 mins or which has Commentaries as special feature. Return the movie title, length, and special_features.
+Assumptions:
+In films, fields are:
+Length (number of minutes)
+Special Features (a comma‑separated string)
+Title
+
+Query:
+```js
+db.films.aggregate([
+  // add numeric length field
+  {
+    $addFields: {
+      lengthNum: { $toInt: "$Length" }
+    }
+  },
+  // filter by lengthNum or commentaries
+  {
+    $match: {
+      $or: [
+        { lengthNum: { $gt: 25 } },
+        { "Special Features": /Commentaries/ }
+      ]
+    }
+  },
+  // sort and project
+  { $sort: { lengthNum: -1 } },
+  {
+    $project: {
+      _id:               0,
+      Title:             1,
+      Length:            1,
+      "Special Features": 1
+    }
+  },
+  { $limit: 2 }
+]);
+```
+
+6. List top 10 countries with the most number of customers.
+Assumptions:
+In customers, field Country holds the country name.
+
+Query:
+```js
+db.customers.aggregate([
+  {
+    $group: {
+      _id:           "$Country",
+      customerCount: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id:     0,
+      country: "$_id",
+      customerCount: 1
+    }
+  },
+  { $sort: { customerCount: -1 } },
+  { $limit: 10 }
+]);
+```
+
+7. List all replacement costs along with count for each replacement cost.
+Assumptions:
+In films, "Replacement Cost" is numeric‐string (grouping on string is fine)
+
+Query:
+```js
+db.films.aggregate([
+  {
+    $group: {
+      _id:   "$Replacement Cost",
+      count: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id:             0,
+      replacementCost: "$_id",
+      count:           1
+    }
+  },
+  { $sort: { replacementCost: 1 } }
+]);
+```
+
+8. List all films relating to Mexico for a Cinco de Mayo promotion special.
+Assumptions:
+In films, either "Title" or "Description" may contain “Mexico”
+
+Query (assumes 'Mexico' in description or title):
+```js
+db.films.find(
+  {
+    $or: [
+      { Title:       /Mexico/i },
+      { Description: /Mexico/i }
+    ]
+  },
+  { _id: 0, Title: 1, Description: 1 }
+);
+```
+
+9. List all the new releases for 2020 in order to promote them.
+Assumptions:
+Although your films.json doesn’t include a release‑year field, assume you’ve added a "Release Year" (number) property when importing.
+
+Query:
+```js
+db.films.find(
+  { "Release Year": 2020 },
+  { _id: 0, Title: 1, "Release Year": 1 }
+).sort({ Title: 1 });
+```
+
+10. Calculate revenue for the Month of August 2005.
+Assumptions:
+In customers, each document has a "Rentals" array, and each rental has a "Payments" array with:
+"Payment Date" (string timestamp)
+"Amount" (number)
+
+Query:
+```js
+db.customers.aggregate([
+  { $unwind: "$Rentals" },
+  { $unwind: "$Rentals.Payments" },
+  // convert to proper date
+  {
+    $addFields: {
+      paymentDate: { $toDate: "$Rentals.Payments.Payment Date" },
+      amount:      "$Rentals.Payments.Amount"
+    }
+  },
+  {
+    $match: {
+      paymentDate: {
+        $gte: ISODate("2005-08-01T00:00:00Z"),
+        $lt:  ISODate("2005-09-01T00:00:00Z")
+      }
+    }
+  },
+  {
+    $group: {
+      _id:          null,
+      totalRevenue: { $sum: "$amount" }
+    }
+  },
+  {
+    $project: {
+      _id:          0,
+      totalRevenue: 1
+    }
+  }
+]);
+```
+
+11. Find movies with the highest number of Actors.
+Assumptions:
+In films, count actors via Actors array.
+
+Query:
+```js
+db.films.aggregate([
+  {
+    $project: {
+      _id:       0,
+      Title:     1,
+      actorCount:{ $size: "$Actors" }
+    }
+  },
+  { $sort: { actorCount: -1 } },
+  { $limit: 1 }
+]);
+```
+
+12. List top Movie rating (G, PG, PG-13, R or NC-17) from the list of films.
+Assumptions:
+In films, field Rating holds one of those five values.
+
+Query:
+```js
+db.films.aggregate([
+  {
+    $group: {
+      _id:   "$Rating",
+      count: { $sum: 1 }
+    }
+  },
+  { $sort: { count: -1 } },
+  { $limit: 1 },
+  {
+    $project: {
+      _id:      0,
+      topRating:"$_id",
+      count:    1
+    }
+  }
+]);
+```
+
+Advanced question:
+List top Movie rating that is rented the most / popular among the customers.
+
+Assumptions:
+have two collections in sakila database:
+customers — each document has a top‐level Rentals array. Each element of Rentals is an object containing at least:
+filmId – the ObjectId (or numeric ID) of the rented film.
+other rental metadata (we ignore here).
+films — each document has:
+_id (or filmId) matching the filmId in Rentals.
+Rating (one of "G", "PG", "PG-13", "R", "NC-17").
+
+Query:
+```js
+db.customers.aggregate([
+  // Step 1: Unwind each customer's rentals into separate documents
+  { $unwind: "$Rentals" },
+
+  // Step 2: Look up the full film document to get its Rating
+  { 
+    $lookup: {
+      from:         "films",            // target collection
+      localField:   "Rentals.filmId",  // field in customers.Rentals
+      foreignField: "_id",             // field in films
+      as:           "filmDoc"
+    }
+  },
+  { $unwind: "$filmDoc" },
+
+  // Step 3: Group by filmDoc.Rating, counting one per rental
+  {
+    $group: {
+      _id:   "$filmDoc.Rating",
+      count: { $sum: 1 }
+    }
+  },
+
+  // Step 4: Sort descending by rental count
+  { $sort: { count: -1 } },
+
+  // Step 5: Keep only the top rating
+  { $limit: 1 },
+
+  // Step 6: Clean up the output fields
+  {
+    $project: {
+      _id:    0,
+      rating: "$_id",
+      rentals: "$count"
+    }
+  }
+]);
+```
+
+
+13. List number of actors who worked in each category of films.
+Assumptions:
+In films, fields:
+Category (string)
+Actors (array of sub‑docs with actorId)
+
+Query:
+```js
+db.films.aggregate([
+  { $unwind: "$Actors" },
+  {
+    // form unique (category, actorId) pairs
+    $group: {
+      _id: {
+        category: "$Category",
+        actorId:  "$Actors.actorId"
+      }
+    }
+  },
+  {
+    // count distinct actors per category
+    $group: {
+      _id:        "$_id.category",
+      actorCount: { $sum: 1 }
+    }
+  },
+  {
+    $project: {
+      _id:       0,
+      category:  "$_id",
+      actorCount:1
+    }
+  },
+  { $sort: { actorCount: -1 } }
+]);
+```
+
+14. Find the average length of movies in each category.
+Assumptions:
+In films, Category and numeric Length (string ⇒ cast to int)
+
+Query:
+```js
+db.films.aggregate([
+  {
+    $group: {
+      _id:       "$Category",
+      avgLength: { $avg: { $toInt: "$Length" } }
+    }
+  },
+  {
+    $project: {
+      _id:           0,
+      category:      "$_id",
+      averageLength:{ $round: ["$avgLength", 2] }
+    }
+  },
+  { $sort: { averageLength: -1 } }
+]);
+```
+
+15. List the customers with at least 40 rentals.
+Assumptions:
+In customers, Rentals is an array.
+
+Query:
+```js
+db.customers.aggregate([
+  {
+    $project: {
+      _id:         0,
+      customerId:  "$_id",
+      name:        { $concat: ["$First Name", " ", "$Last Name"] },
+      rentalCount: { $size: "$Rentals" }
+    }
+  },
+  { $match: { rentalCount: { $gte: 40 } } },
+  { $sort: { rentalCount: -1 } }
+]);
+```
+
