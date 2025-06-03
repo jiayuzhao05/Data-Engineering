@@ -1,0 +1,4 @@
+Attribute,Description
+movie_id (FK),FK to Movie
+theatre_id (FK),FK to Theatre
+tickets_sold,Number of tickets sold

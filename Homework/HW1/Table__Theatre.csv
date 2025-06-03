@@ -1,0 +1,5 @@
+Attribute,Description
+theatre_id (PK),PK
+name,Theatre name
+address,Theatre address
+ticket_price,Single ticket price

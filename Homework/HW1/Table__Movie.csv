@@ -1,0 +1,6 @@
+Attribute,Description
+movie_id (PK),PK
+title,Name of the movie
+year,Year of production
+rating,"Rating (G, PG, etc.)"
+producer_id (FK),FK to Producer

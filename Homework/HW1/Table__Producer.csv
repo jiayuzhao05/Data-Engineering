@@ -1,0 +1,4 @@
+Attribute,Description
+producer_id (PK),PK
+first_name,First name of producer
+last_name,Last name of producer

@@ -1,0 +1,5 @@
+Attribute,Description
+movie_id (FK),FK to Movie
+actor_id (FK),FK to Actor
+role_type,'Starring' or 'Supporting'
+payment_amount,Amount paid to actor for role

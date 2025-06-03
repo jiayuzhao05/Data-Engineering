@@ -1,0 +1,4 @@
+Attribute,Description
+actor_id (PK),PK
+first_name,First name of actor
+last_name,Last name of actor
