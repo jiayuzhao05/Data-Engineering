@@ -1,0 +1,13 @@
+Appointment ID,Physician ID,Physician Name,Physician Phone,Physician Department,Patient ID,Patient Name,Patient Address,Patient Phone,Appointment Date,Surgery 
+1,10,Helen Pearson,312-237-9473,Orthopedics,1,Joe Korn,"123 W Randolph Street, Chicago, Illinois 60604",312-857-2947,2017-03-07,Tendon Repair
+2,10,Helen Pearson,312-237-9473,Orthopedics,2,Gillian White,"610 W Illinois Street, Chicago, Illinois 60604",773-285-8264,2017-03-22,Hip Replacement
+3,11,Olga Kay,312-237-2756,Oncology,1,Joe Korn,"123 W Randolph Street, Chicago, Illinois 60604",312-857-2947,2016-06-13,Sentinel Node Biopsy
+4,12,Robert Smith,312-237-2190,Orthopedics,3,Jill Bell,"517 W Huron Street, Chicago, Illinois 60612",630-231-5475,2017-06-13,Tendon Repair
+5,12,Robert Smith,312-237-2190,Orthopedics,3,Jill Bell,"517 W Huron Street, Chicago, Illinois 60612",630-231-5475,2017-06-14,Knee Replacement
+6,11,Olga Kay,312-237-2756,Oncology,2,Gillian White,"610 W Illinois Street, Chicago, Illinois 60604",773-285-8264,2017-08-15,Bone Marrow Biopsy
+7,13,Ashish Patel,312-237-4629,Hepatology,4,Ian MacKay,"23 N Dearborn Street, Chicago, Illinois 60654",312-745-9277,2016-01-04,Hepatic Resection
+8,13,Ashish Patel,312-237-4629,Hepatology,4,Ian MacKay,"23 N Dearborn Street, Chicago, Illinois 60654",312-745-9277,2018-01-05,Liver Transplant
+9,10,Helen Pearson,312-237-9473,Orthopedics,5,Sheela Nupur,"559 W Monroe Street, Chicago Illinois 60607",773-929-7365,2016-01-04,Knee Arthroscopy
+10,14,Wei Jing,312-237-4837,Plastics,1,Joe Korn,"123 W Randolph Street, Chicago, Illinois 60604",312-857-2947,2016-02-12,Skin Graft
+11,14,Wei Jing,312-237-4837,Plastics,6,Mike Li,"56 E Lake Street, Chicago, Illinois 60601",773-643-9132,2018-04-15,Skin Graft
+12,11,Olga Kay,312-237-2756,Oncology,6,Mike Li,"56 E Lake Street, Chicago, Illinois 60601",773-643-9132,2017-06-13,Sentinel Node Biopsy
