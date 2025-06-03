@@ -1,0 +1,109 @@
+Assignment 7
+
+Q1. Find all producers that produced the movie When Harry Met Sally.
+Assumptions: Exact title match, case-sensitive.
+Cypher:
+MATCH (p:Person)-[:PRODUCED]->(m:Movie {title: 'When Harry Met Sally'})
+RETURN p.name AS Producer
+
+Q2. Find directors who have directed more than 2 movies.  Return the name of the director and the count of movies they directed, ordered by movie count in descending order.
+Assumptions: Each DIRECTED relationship represents one unique movie.
+Cypher:
+MATCH (p:Person)-[:DIRECTED]->(m:Movie)
+WITH p, COUNT(m) AS movieCount
+WHERE movieCount > 2
+RETURN p.name AS Director, movieCount
+ORDER BY movieCount DESC
+
+Q3. Find the actors who acted in 5+ movies and the movies in which they acted.  Return the name of the actor, and the title of the films, ordered by the number of films acted per actor in descending order.
+Assumptions: Collecting all movie titles per actor.
+Cypher:
+MATCH (a:Person)-[:ACTED_IN]->(m:Movie)
+WITH a, count(m) AS MovieCount, collect(m.title) AS Movies
+WHERE MovieCount >= 5
+RETURN a.name AS Actor, Movies, MovieCount
+ORDER BY MovieCount DESC
+
+Q4. Find the people who were the producer, writer, AND director (the same person who held all 3 roles) at the same time on a film. Return the names of the people and the titles of the films.
+Assumptions: All roles must be linked to the same movie node.
+Cypher:
+MATCH (p:Person)-[:DIRECTED]->(m:Movie)
+MATCH (p)-[:PRODUCED]->(m)
+MATCH (p)-[:WROTE]->(m)
+RETURN p.name AS Name, m.title AS Movie
+
+Q5. Find all the actors that are exactly 3 degrees away from Tom Hanks.  NOTE: In this case, we want to define a "degree" as a common connection between two people.  So, if Tom Hanks is connected to Gary Sinise by way of them both acting in Apollo 13, then that connection has a path length of 2, and we would consider Gary Sinise to be 1 degree away from Tom Hanks since they both acted in the same movie.
+Assumptions: Path with exactly 4 steps via ACTED_IN implies 3 degrees separation.
+Cypher:
+MATCH (tom:Person {name: "Tom Hanks"})-[:ACTED_IN]->(:Movie)<-[:ACTED_IN]-(person1:Person),
+      (person1)-[:ACTED_IN]->(:Movie)<-[:ACTED_IN]-(person2:Person),
+      (person2)-[:ACTED_IN]->(:Movie)<-[:ACTED_IN]-(person3:Person)
+WHERE NOT person3 = tom AND NOT person3 = person1 AND NOT person3 = person2
+RETURN DISTINCT person3.name AS Actor3DegreesFromTomHanks
+
+Q6. Update database to reflect new name ("Larry Wachowski") for director "Lana Wachowski".
+Assumptions: Only one match expected.
+Cypher:
+MATCH (p:Person {name: "Lana Wachowski"})
+SET p.name = "Larry Wachowski"
+
+Q7. Create a section of fun movies whose summary contains the keyword "fun".
+Assumptions: Case-insensitive search on review summary.
+Cypher:
+MATCH (p:Person)-[r:REVIEWED]->(m:Movie)
+WHERE toLower(r.summary) CONTAINS "fun"
+RETURN DISTINCT m.title AS FunMovies
+
+Q8. List all the release years and count all movies released in that year.
+Assumptions: Each movie node has a 'released' property.
+Cypher:
+MATCH (m:Movie)
+RETURN m.released AS Year, count(*) AS MovieCount
+ORDER BY Year
+
+Q9. List all the movies whose rating >= 90.
+Assumptions: Movie ratings are stored on the REVIEWED relationship between a Person and a Movie. A movie is considered to have a rating ≥ 90 if at least one review has a rating property with a value ≥ 90, regardless of the average rating.
+Cypher:
+MATCH (:Person)-[r:REVIEWED]->(m:Movie)
+WHERE r.rating >= 90
+RETURN DISTINCT m.title AS movie, r.rating
+
+
+Q10. List the top producers who are most likely to entertain new movies production hint: Producers with most movies produced.
+Assumptions: Interpreted "top producers" as those with the highest number of PRODUCED relationships. Returned top 5 producers most likely to entertain new productions based on past activity.
+Cypher:
+MATCH (p:Person)-[:PRODUCED]->(m:Movie)
+RETURN p.name AS Producer, count(m) AS MoviesProduced
+ORDER BY MoviesProduced DESC
+LIMIT 5
+
+Q11. List all the movies along with a number of reviews received. order the results by a number of reviews in descending order.
+Assumptions: One REVIEWED relationship = one review.
+Cypher:
+MATCH (:Person)-[r:REVIEWED]->(m:Movie)
+RETURN m.title AS Movie, count(r) AS ReviewCount
+ORDER BY ReviewCount DESC
+
+Q12. Find the shortest path between movies "The Matrix" and "The Matrix Reloaded".
+Assumptions: Find shortest undirected path between movie nodes.
+Cypher:
+MATCH (m1:Movie {title: 'The Matrix'}), (m2:Movie {title: 'The Matrix Reloaded'})
+MATCH p=shortestPath((m1)-[*]-(m2))
+RETURN p
+
+Q13. List all the writers and the list of movies they have written.
+Assumptions: Group movies by writer.
+Cypher:
+MATCH (p:Person)-[:WROTE]->(m:Movie)
+WITH p.name AS Writer, collect(m.title) AS Movies
+RETURN Writer, Movies
+
+Q14. List top 15 actors who have co-acted with each other the most. Ignore The Matrix trilogy for this analysis.
+Assumptions: Actor co-appearance is defined as two actors acting in the same movie. Actor pairs are considered undirected and unique (i.e., [A, B] is the same as [B, A], so duplicates are avoided using a1.name < a2.name). The "Matrix trilogy" refers specifically to the following movies: "The Matrix", "The Matrix Reloaded", and "The Matrix Revolutions", and these are explicitly excluded using an IN clause filter.
+Cypher:
+MATCH (a1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(a2:Person)
+WHERE a1.name < a2.name AND NOT m.title IN ["The Matrix", "The Matrix Reloaded", "The Matrix Revolutions"]
+WITH a1.name AS Actor1, a2.name AS Actor2, COUNT(m) AS MoviesTogether
+ORDER BY MoviesTogether DESC
+LIMIT 15
+RETURN Actor1, Actor2, MoviesTogether
